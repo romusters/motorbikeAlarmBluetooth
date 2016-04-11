@@ -15,9 +15,10 @@ def main():
 	sock=bluetooth.BluetoothSocket( bluetooth.RFCOMM )
 	sock.connect((mod1_addr, port))
 
-	qX = Queue.Queue(4)
-	qY = Queue.Queue(4)
-	qZ = Queue.Queue(4)
+	qsize = 8
+	qX = Queue.Queue(qsize)
+	qY = Queue.Queue(qsize)
+	qZ = Queue.Queue(qsize)
 
 	X = 0
 	Y = 0
@@ -47,18 +48,20 @@ def main():
 
 			#If the Queue is full, we can get the mean
 			if qX.full() & qY.full() & qZ.full():
+				#Copy queue
 				tqX = qX
 				tqY = qY
 				tqZ = qZ
 
-				meanX = calcMean(qX)
-				meanY = calcMean(qY)
-				meanZ = calcMean(qZ)
+				meanX = calcMean(tqX)
+				meanY = calcMean(tqY)
+				meanZ = calcMean(tqZ)
 
-				threshold = 10
+				threshold = 4
 				#if new data deviates to much from the mean, movement has been detected!
-				if X > meanX + threshold or X < meanX - threshold:
-					alarm()
+				#DISABLED due to BUG
+				# if X > meanX + threshold or X < meanX - threshold:
+				# 	alarm()
 
 				if Y > meanY + threshold or Y < meanY - threshold:
 					alarm()
@@ -75,7 +78,6 @@ def main():
 
 def calcMean(q):
 	size = q.qsize()
-	print "size of queu: ", size
 	meanQ = 0
 	while not q.empty():
 		meanQ += q.get()
