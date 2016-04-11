@@ -3,7 +3,7 @@ import time
 import sys
 import pyaudio
 import math
-import Queue
+from collections import deque
 
 #Bluetooth address
 mod1_addr = "98:D3:31:90:51:AB"
@@ -16,9 +16,9 @@ def main():
 	sock.connect((mod1_addr, port))
 
 	qsize = 8
-	qX = Queue.Queue(qsize)
-	qY = Queue.Queue(qsize)
-	qZ = Queue.Queue(qsize)
+	qX = deque(maxlen=qsize)
+	qY = deque(maxlen=qsize)
+	qZ = deque(maxlen=qsize)
 
 	X = 0
 	Y = 0
@@ -42,20 +42,23 @@ def main():
 				Z = float(data[2])
 
 				#Put the data in a Queue so we always get the 4 most recent elements
-				qX.put(X)
-				qY.put(Y)
-				qZ.put(Z)
+				qX.append(X)
+				qY.append(Y)
+				qZ.append(Z)
 
 			#If the Queue is full, we can get the mean
-			if qX.full() & qY.full() & qZ.full():
+			if len(list(qX)) == qsize & len(list(qY)) == qsize & len(list(qZ)) == qsize:
+				print "queue is full"
 				#Copy queue
 				tqX = qX
 				tqY = qY
 				tqZ = qZ
 
-				meanX = calcMean(tqX)
-				meanY = calcMean(tqY)
-				meanZ = calcMean(tqZ)
+				meanX = calcMean(tqX, qsize)
+				meanY = calcMean(tqY, qsize)
+				meanZ = calcMean(tqZ, qsize)
+
+				print "Averages are: ", meanX, meanY, meanZ
 
 				threshold = 4
 				#if new data deviates to much from the mean, movement has been detected!
@@ -76,13 +79,14 @@ def main():
 
 		time.sleep(1)
 
-def calcMean(q):
-	size = q.qsize()
-	meanQ = 0
-	while not q.empty():
-		meanQ += q.get()
-	meanQ /= size
+def calcMean(q, qsize):
+	meanQ = mean(list(q))
+	q.popleft()
 	return meanQ
+
+
+def mean(l):
+	return float(sum(l))/len(l) if len(l) > 0 else float('nan')
 
 
 def checkData(data):
@@ -94,7 +98,7 @@ def calibrate(sock):
 	print "Calibrating"
 	while(True):
 		message = sock.recv(64)
-		data =  message#.split('\n')
+		data =  message
 
 		if checkData(data):
 			print "Calibrated"
