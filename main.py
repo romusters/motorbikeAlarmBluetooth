@@ -55,14 +55,15 @@ def main():
 				meanY = calcMean(qY)
 				meanZ = calcMean(qZ)
 
+				threshold = 10
 				#if new data deviates to much from the mean, movement has been detected!
-				if X > meanX + 4 or X < meanX + 4:
+				if X > meanX + threshold or X < meanX - threshold:
 					alarm()
 
-				if Y > meanY + 4 or Y < meanY + 4:
+				if Y > meanY + threshold or Y < meanY - threshold:
 					alarm()
 
-				if Z > meanZ + 4 or Z < meanZ + 4:
+				if Z > meanZ + threshold or Z < meanZ - threshold:
 					alarm()
 		except:
 			import traceback
